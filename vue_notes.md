@@ -1,4 +1,4 @@
-#### `v-show`  vs `v-if`
+## `v-show`  vs `v-if`
 
 `v-if` is “real” conditional rendering because it ensures that event listeners and child components inside the conditional block are properly destroyed and re-created during toggles.
 
@@ -18,7 +18,7 @@ You can use $refs to get some DOMs; however, if you make some changes, you will 
 
 
 
-Virtual DOM:
+## Virtual DOM
 
 Because of overhead to update a DOM element is quite high, thus, `vue`  provides us with a layer called `virtual Dom`. Only check the difference part then update the corresponding part in DOM.
 
@@ -32,11 +32,13 @@ Because of overhead to update a DOM element is quite high, thus, `vue`  provides
 
 ![The Vue Instance Lifecycle](imgs/lifecycle.png)
 
+Why does life cycle matter?
 
+Because every component in vue is a new instance of `vue` object.
 
 ![1545739984811](imgs/1545739984811.png)
 
-
+Since components are reusable Vue instances, they accept the same options as `new Vue`, such as `data`, `computed`, `watch`, `methods`, and lifecycle hooks. The only exceptions are a few root-specific options like `el`.
 
 ## What is a *"development workflow"*?
 
@@ -48,7 +50,7 @@ The key idea behind scene is that we compiled the code into executable code befo
 
 #### 
 
-## The function of  `webpack` in our project:
+## The function of  `webpack`
 
  In the `webpack`, every module will be converted by a specific *loader* before being packed into *bundle*. `Vue` provides users with vue-loader plugin to execute the transformation of `.vue` (Single File Component).  For instance, convert ES6 to ES 5 so that every browser can run our code. It will bundle tons of dependencies into a single bundle.js file. `webpack` provides various *loaders* to compile different files into primary files. 
 
@@ -204,4 +206,124 @@ eventBus.eventHandler(data);
 ```
 
 ![State Management](imgs/state.png)
+
+It’s important to note that you should never replace the original state object in your actions - the components and the store need to share reference to the same object in order for mutations to be observed.
+
+### slots
+
+Pass `html` remember to use `<slot>`; *you can style the  `<slot>` in the **parent** component!* This is indeed pretty useful, since it allows you to write wrapper components which only provide a certain frame but don't interfere with the styling of the data/ content you pass into them.
+
+
+
+#### How do we distribute `<slot>` and render them in different places? 
+
+```html
+<h2 slot="title">title here</h2>
+<p>
+    If you do not set the slot attribute for tags
+</p>
+<p>
+    these tags will be automatically rendered as default <slot>
+</p>
+<p slot="content">content here</p>
+```
+
+this is in the parent component, adding a `slot` attributes in the slot template; then, use `name` attribute to use them separately
+
+```html
+<template>
+    <div>
+        <slot name="title"></slot>
+        <slot name="content"></slot>
+        <slot></slot>
+        <slot name="subtitle">
+            set default value if there is no subtitle tage
+        </slot>
+    </div>
+</template>
+```
+
+
+
+####  Dynamic component
+
+Here, we introduce how to switch components, that is, showing component dynamically.
+
+You can `import` specific components that you want to switch in the parent component.
+
+Then, designate a new variable to store the name of the component(type: `String`); and the name of variable must be consistent with the component you just imported.
+
+
+
+```html
+<component :is="selectedComponent">
+</component>
+```
+
+Note that during switching process, the component will be `destroyed` by default and new component will be `created`. 
+
+To reuse the component, use `<keep-alive>` tag;
+
+```html
+<keep-alive>
+    <component :is="selectedComponent">
+    </component>
+</keep-alive>
+```
+
+Since `<keep-alive>` grants us ability to reuse the component, we cannot use `destory` life cycle hook as before. Here, vue introduces two new life cycle methods: `activated` and `deactivated`
+
+> In 2.2.0+ and above, `activated` and `deactivated` will fire for all nested components inside a `<keep-alive>` tree.
+
+
+
+```javascript
+deactivated() {
+    // new lifecycle hook
+},
+activated(){
+    // whenever dynamically change component
+}
+```
+
+If you still feel confused about it, please the intangible instance here:
+
+```html
+<template>
+    <button class="btn btn-primary" @click="selectedComponent = 'appBlue'">
+        Load Blue Template
+    </button>
+    <button class="btn btn-success" @click="selectedComponent = 'appGreen'">
+        Load Green Template
+    </button>
+    <button class="btn btn-danger" @click="selectedComponent = 'appRed'">
+        Load Red Template
+    </button>
+    <hr>
+    <component :is="selectedComponent">
+        <p>This is the Content</p>
+    </component>   
+</template>
+
+<script>
+    import Blue from './components/Blue.vue';
+    import Green from './components/Green.vue';
+    import Red from './components/Red.vue';
+
+    export default {
+        data: function() {
+          return {
+              selectedComponent: 'appBlue'
+          }
+        },
+        components: {
+            appBlue: Blue,
+            appGreen: Green,
+            appRed: Red
+        }
+    }
+</script>
+```
+
+
 
