@@ -327,3 +327,47 @@ If you still feel confused about it, please the intangible instance here:
 
 
 
+## Event modifier: `.native`
+
+Sometimes I wanna my component can react to a click event as a whole entity; in the parent component, if you just add `<child-component @click="doSomething"></child-component>`, it  will not work as expected. The reason for this is that all customized tags finally will be converted into normal html; thus, there will be no `<child-component>` tag, not to mention having click listener.
+
+`.native` tells vue that as the build treat clicks on the template as clicks on the component.
+
+```html
+<child-component @click.native="doSomething"></child-component>
+```
+
+
+
+There are several useful `modifier`s please check the official document.
+
+CSS3 supports multiple line string; search for google!
+
+
+
+#### How do we store the value of  `checkbox` and `radio`?
+
+if there are multiple checkbox binding by `v-model` on the same variable, vue will help us store all these options in an array.
+
+
+
+#### How do we achieve multiple `radio`s only one option?
+
+Like male or female. `v-model` binds the multiple options on the same variable, vue will recognize their belong to the same group. Thus, automatically binding the `value` of radio for you.
+
+
+
+#### How do we handle `<select>` and `<option>`
+
+In `<option>` set `:selected` you can set default selected item.
+
+Set `v-bind` in `<select>` 
+
+
+
+If you wanna control `<input>`, you must set `:value` property. 
+
+
+
+## Forms
+
