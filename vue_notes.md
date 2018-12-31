@@ -325,9 +325,9 @@ If you still feel confused about it, please the intangible instance here:
 </script>
 ```
 
+# Forms
 
-
-## Event modifier: `.native`
+#### Event modifier: `.native`
 
 Sometimes I wanna my component can react to a click event as a whole entity; in the parent component, if you just add `<child-component @click="doSomething"></child-component>`, it  will not work as expected. The reason for this is that all customized tags finally will be converted into normal html; thus, there will be no `<child-component>` tag, not to mention having click listener.
 
@@ -369,5 +369,213 @@ If you wanna control `<input>`, you must set `:value` property.
 
 
 
-## Forms
+# Directives
+
+
+
+name convention: prefix with `v-`, telling vue that it is not a normal attributes but a directive.
+
+Like component, you need to register it globally or locally.
+
+> No matter directives or components they follow the same register convention:
+>
+> *Register Globally*: in `main.js`, using `Vue.component('cpntName', callback)` or `Vue.directive('dirName', callback)`; 
+>
+> *Register Locally*:  in the parent component, in the export default add a new property called `directives`, which is a object with customized directive name as key , value is a callback/ hooks.
+
+Directives have five hooks:
+
+![1546208253127](imgs/1546208253127.png)
+
+A directive definition object can provide several hook functions (all optional):
+
+- `bind`: called only once, when the directive is first bound to the element. This is where you can do one-time setup work.
+- `inserted`: called when the bound element has been inserted into its parent node (this only guarantees parent node presence, not necessarily in-document).
+- `update`: called after the containing component’s VNode has updated, **but possibly before its children have updated**. The directive’s value may or may not have changed, but you can skip unnecessary updates by comparing the binding’s current and old values (see below on hook arguments).
+
+- `componentUpdated`: called after the containing component’s VNode **and the VNodes of its children** have updated.
+- `unbind`: called only once, when the directive is unbound from the element.
+
+We’ll explore the arguments passed into these hooks (i.e. `el`, `binding`, `vnode`, and `oldVnode`) 
+
+> Directives give you direct DOM access via the first argument (`el` ). This allows you to do EVERYTHING you can do in vanilla JS with a HTML element
+
+
+
+If your directive needs multiple values, you can also pass in a JavaScript object literal. Remember, directives can take any valid JavaScript expression.
+
+You can pass `argument` in directives and of course `modifiers`.
+
+```html
+<div v-demo:argument="{ color: 'white', text: 'hello!' }"></div>
+```
+
+```javascript
+Vue.directive('demo', function (el, binding) {
+    if(binding.arg == 'background') {
+         console.log(binding.value.color) // => "white"
+  		console.log(binding.value.text)  // => "hello!"
+    }
+    
+    if(binding.modifiers['delayed']) {
+        //some operation
+    }
+})
+```
+
+```html
+<template>
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3">
+                <h1>Directives Exercise</h1>
+                <!-- Exercise -->
+                <!-- Build a Custom Directive which works like v-on (Listen for Events) -->
+                <button v-customOn:click="clicked" class="btn btn-primary">Click Me</button>
+                <hr>
+                <div
+                        style="width: 100px; height: 100px; background-color: lightgreen"
+                        v-customOn:mouseenter="mouseEnter"
+                        v-customOn:mouseleave="mouseLeave"></div>
+            </div>
+        </div>
+    </div>
+</template>
+```
+
+```html
+<script>
+    export default {
+        directives: {
+            customOn: {
+                bind(el, binding) {
+                    // all these api are offered by vanilla javascript
+//                    el.onclick = function() {
+//                        binding.value();
+//                    }
+                    const type = binding.arg;
+                    const fn = binding.value;
+                    el.addEventListener(type, fn);
+                }
+            }
+        },
+        methods: {
+            clicked() {
+                alert('I was clicked!');
+            },
+            mouseEnter() {
+                console.log('Mouse entered!');
+            },
+            mouseLeave() {
+                console.log('Mouse leaved!');
+            }
+        }
+    }
+</script>
+```
+
+
+
+# FILTERS & MIXINS
+
+Filters are very similar to `Pipe` in Angular!
+
+Put registered filters into the `filters` property  
+
+High resemblance to `component` and  `directive` you need to register the `filters` locally or globally
+
+You can chain pipes together
+
+> Keep in mind: some complicated operations you should put them into `computed` property as a function in terms of performance.
+
+The example here will automatically match and filter the fruits based on users' input. 
+
+You might wanna use `filter` in each element created by `v-for`. However, as the reason I mentioned, it will be more suitable to use `computed` property.
+
+```html
+<template>
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3">
+                <h1>Filters & Mixins</h1>
+                <p>{{ text | toUppercase | to-lowercase }}</p>
+                <hr>
+                <input v-model="filterText">
+                <ul>
+                    <li v-for="fruit in filteredFruits">{{ fruit }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+    export default {
+        data() {
+            return {
+                text: 'Hello there!',
+                fruits: ['Apple', 'Banana', 'Mango', 'Melon'],
+                filterText: ''
+            }
+        },
+        filters: {
+            toUppercase(value) {
+                return value.toUpperCase();
+            }
+        },
+        computed: {
+            filteredFruits() {
+                return this.fruits.filter((element) => {
+                    return element.match(this.filterText);
+                });
+            }
+        }
+    }
+</script>
+```
+
+MIXINS helps us avoid code duplication. (integrated a piece of duplicated code into the instance. But this is a little like, dependency Injection?!)
+
+The concept of `mixins` is really similar to share common code between components. During this process, there is no overridden but just add into the corresponding part! There is another thing that needs attention: the order of running life cycle hooks is that `mixins` precedence the component.
+
+>  Rarely use `mixins` globally!! Because it will be added into every vue instance once registered globally!!
+
+MIXINS is shallow copy !! You can manipulate this but don't affect other components.
+
+```javascript
+//mixin javascript (it is a object owing similar sturcture to vue instance)
+export const fruitMixin = {
+    data() {
+        return {
+            fruits: ['Apple', 'Banana', 'Mango', 'Melon'],
+            filterText: ''
+        }
+    },
+    computed: {
+        filteredFruits() {
+            return this.fruits.filter((element) => {
+                return element.match(this.filterText);
+            });
+        }
+    },
+    created() {
+        console.log('Created');
+    }
+};
+```
+
+Use this `mixin` in the vue instance (component):
+
+```html
+<script>
+    import { fruitMixin } from './fruitMixin';
+
+    export default {
+        mixins: [fruitMixin],
+        created() {
+            console.log('Inside List Created Hook');
+        }
+    }
+</script>
+```
 
