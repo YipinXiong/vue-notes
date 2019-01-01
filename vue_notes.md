@@ -10,11 +10,11 @@ Generally speaking, `v-if` has higher toggle costs while `v-show` has higher ini
 
 
 
-comfirm (yes or no, dialog in browser provided by javascript)
+`window.confirm` (yes or no, dialog in browser provided by javascript)
 
 
 
-You can use $refs to get some DOMs; however, if you make some changes, you will only get changes once. Because `Vue` instance will hold a template that will be used whenever the `vue` instance re-renders. 
+You can use `$refs` to get some DOMs; however, if you make some changes, you will only get changes once. Because `Vue` instance will hold a template that will be used whenever the `vue` instance re-renders. 
 
 
 
@@ -44,11 +44,9 @@ Since components are reusable Vue instances, they accept the same options as `ne
 
 ![1545827714668](imgs/1545827714668.png)
 
-This workflow provide us with a build process where ES6 code can be converted into ES5 code that can be run directly in the browser. There are various imports. Thus, you require a way to bind them together.
+This workflow provides us with a build process where ES6 code can be converted into ES5 code that can be run directly in the browser. There are various imports. Thus, you require a way to bind them together.
 
 The key idea behind scene is that we compiled the code into executable code before sending it to the user, which tremendously decreases the size of code and improve user experience. (preprocessor)
-
-#### 
 
 ## The function of  `webpack`
 
@@ -68,7 +66,7 @@ We have the main.js file that will be the first file which gets executed when th
 
 Vue accomplishes this by building a **virtual DOM** to keep track of the changes it needs to make to the real DOM. Taking a closer look at this line:
 
-```
+```javascript
 return createElement('h1', this.blogTitle)
 ```
 
@@ -78,7 +76,7 @@ What is `createElement` actually returning? It’s not *exactly* a real DOM elem
 
  
 
-To avoid interfering our main Vue instance, vue `components` defines its inner `data` property as a function that will return a new object:
+To avoid interfering our main vue instance, vue `components` defines its inner `data` property as a function that will return a new object:
 
  ```javascript
 Vue.component('my-cmp', {
@@ -101,23 +99,19 @@ component-registration
 
 `vue` will give \<template> a special attribute, like `data-v-aswqgfq`. Then, after compiling process, you can see that `vue` will create a \<style> link for each `.vue` file, adding them into the header of the final html. Here is the trick: in the style, `div[data-v-aswqgfq] ` CSS selector will select the element to style it. In this way, `vue` achieves the goal (scoped styling).
 
-
-
 ## Component communication
 
 ```html
 <app-user-detail prop="name"></app-user-detail>
-<--! below one is dynanmic binding; the above one is assigning a static string-->
+<!-- below one is dynanmic binding; the above one is assigning a static string-->
 <app-user-detail :prop="name"></app-user-detail>
 ```
-
-
 
 > Note that the property name in html is **insensitive!**
 >
 > In child component, `props` array's elements can be used as `data`
 
-> Note 2: `props` array supports type validation:
+> Note 2: `props` property supports type validation:
 >
 > ```javascript
 > props: {
@@ -162,11 +156,11 @@ It is that kind of an object serving as a place to listen to events and passing 
 `eventBus` here is an abstract concept. Literally, `eventBus` is a new vue instance.  
 
 ```javascript
-//using the hook function to achieve eventBus
+// using the hook function to achieve eventBus
 import { eventBus } from '../main'
-//create eventBus, new vue instance, in `main.js` and `export const eventBus`
+// create eventBus, new vue instance, in `main.js` and `export const eventBus`
 methods: {
-    //bind the eventListener to the event from eventBus on receiving component
+    // bind the eventListener to the event from eventBus on receiving component
     created(){
 		eventBus.$on('customizedEvent', callback);        
     }
@@ -215,7 +209,7 @@ Pass `html` remember to use `<slot>`; *you can style the  `<slot>` in the **pare
 
 
 
-#### How do we distribute `<slot>` and render them in different places? 
+#### How do we distribute `<slot>` and render pieces in different places? 
 
 ```html
 <h2 slot="title">title here</h2>
@@ -228,7 +222,7 @@ Pass `html` remember to use `<slot>`; *you can style the  `<slot>` in the **pare
 <p slot="content">content here</p>
 ```
 
-this is in the parent component, adding a `slot` attributes in the slot template; then, use `name` attribute to use them separately
+This is in the parent component, adding a `slot` attributes in the slot template; then, use `name` attribute to use them individually.
 
 ```html
 <template>
@@ -373,7 +367,7 @@ If you wanna control `<input>`, you must set `:value` property.
 
 
 
-name convention: prefix with `v-`, telling vue that it is not a normal attributes but a directive.
+**name convention**: *prefix with `v*-`, telling vue that it is not a normal attributes but a directive.
 
 Like component, you need to register it globally or locally.
 
@@ -579,3 +573,36 @@ Use this `mixin` in the vue instance (component):
 </script>
 ```
 
+# Animations
+
+allow your users how to use your application
+
+![1546333685468](imgs/1546333685468.png)
+
+Here is the diagram how animation in vue works, through toggling CSS classes dynamically.
+
+ingredients: `<transition>`, `name` attribute in `<transition>`; and there are four classes I mentioned above (like hooks or frame process).
+
+`name` attribute helps vue identify and style of the `transition`. And this `name` will be the prefix of the classes.
+
+`appear` built-in attribute offers you an great animation when elements are loaded.
+
+[CSS animate package you can use](https://github.com/daneden/animate.css)
+
+You can also add `enter-activate-class`, `leave-active-class`, etc. to add specific CSS classes dynamically.
+
+
+
+#### Transitioning between multiple elements
+
+You must set `key` attribute!
+
+> In this case, you can only use `v-if` rather than `v-show` 
+
+
+
+ some hooks:
+
+![1546344807959](imgs/1546344807959.png)
+
+To know which events are emitted at which point of time
