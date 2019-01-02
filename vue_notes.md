@@ -575,21 +575,100 @@ Use this `mixin` in the vue instance (component):
 
 # Animations
 
-allow your users how to use your application
+Vue provides a variety of ways to apply transition effects when items are inserted, updated, or removed from the DOM.
 
 ![1546333685468](imgs/1546333685468.png)
 
 Here is the diagram how animation in vue works, through toggling CSS classes dynamically.
 
-ingredients: `<transition>`, `name` attribute in `<transition>`; and there are four classes I mentioned above (like hooks or frame process).
+Vue provides a `transition` wrapper component, allowing you to add entering/leaving transitions for any element or component in the following contexts:
 
-`name` attribute helps vue identify and style of the `transition`. And this `name` will be the prefix of the classes.
+- Conditional rendering (using `v-if`)
+- Conditional display (using `v-show`)
+- Dynamic components
+- Component root nodes
+
+When an element wrapped in a `transition` component is inserted or removed, this is what happens:
+
+1. Vue will automatically sniff whether the target element has CSS transitions or animations applied. If it does, CSS transition classes will be added/removed at appropriate timings.
+2. If the transition component provided [JavaScript hooks](https://vuejs.org/v2/guide/transitions.html#JavaScript-Hooks), these hooks will be called at appropriate timings.
+3. If no CSS transitions/animations are detected and no JavaScript hooks are provided, the DOM operations for insertion and/or removal will be executed immediately on next frame
 
 `appear` built-in attribute offers you an great animation when elements are loaded.
 
+
+
 [CSS animate package you can use](https://github.com/daneden/animate.css)
 
-You can also add `enter-activate-class`, `leave-active-class`, etc. to add specific CSS classes dynamically.
+
+
+Each of these classes will be prefixed with the name of the transition. Here the `v-`prefix is the default when you use a `<transition>` element with no name. If you use `<transition name="my-transition">` for example, then the `v-enter` class would instead be `my-transition-enter`.
+
+To see an example here:
+
+```html
+<div id="example-1">
+  <button @click="show = !show">
+    Toggle render
+  </button>
+  <transition name="slide-fade">
+    <p v-if="show">hello</p>
+  </transition>
+</div>
+```
+
+```javascript
+new Vue({
+  el: '#example-1',
+  data: {
+    show: true
+  }
+})
+```
+
+```css
+/* Enter and leave animations can use different */
+/* durations and timing functions.              */
+.slide-fade-enter-active {
+  transition: all .3s ease;
+}
+.slide-fade-leave-active {
+  transition: all .8s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-enter, .slide-fade-leave-to
+/* .slide-fade-leave-active below version 2.1.8 */ {
+  transform: translateX(10px);
+  opacity: 0;
+}
+```
+
+
+
+![Transition Diagram](imgs/transition.png)
+
+
+
+> CSS animations are applied in the same way as CSS transitions, the difference being that `v-enter` is not removed immediately after the element is inserted, but on an `animationend` event.
+>
+> ```css
+> .bounce-enter-active {
+>   animation: bounce-in .5s;
+> }
+> .bounce-leave-active {
+>   animation: bounce-in .5s reverse;
+> }
+> @keyframes bounce-in {
+>   0% {
+>     transform: scale(0);
+>   }
+>   50% {
+>     transform: scale(1.5);
+>   }
+>   100% {
+>     transform: scale(1);
+>   }
+> }
+> ```
 
 
 
@@ -597,7 +676,31 @@ You can also add `enter-activate-class`, `leave-active-class`, etc. to add speci
 
 You must set `key` attribute!
 
-> In this case, you can only use `v-if` rather than `v-show` 
+> In this case, you can only use `v-if` rather than `v-show`
+>
+> When toggling between elements that have **the same tag name**, you must tell Vue that they are distinct elements by giving them unique `key` attributes. Otherwise, Vue’s compiler will only replace the content of the element for efficiency. Even when technically unnecessary though, **it’s considered good practice to always key multiple items within a <transition> component.** 
+
+```html
+<transition>
+  <button v-if="isEditing" key="save">
+    Save
+  </button>
+  <button v-else key="edit">
+    Edit
+  </button>
+</transition>
+
+<!-- To this one-->
+<transition>
+  <button v-bind:key="isEditing">
+    {{ isEditing ? 'Save' : 'Edit' }}
+  </button>
+</transition>
+```
+
+
+
+
 
 
 
@@ -605,4 +708,70 @@ You must set `key` attribute!
 
 ![1546344807959](imgs/1546344807959.png)
 
-To know which events are emitted at which point of time
+```html
+<transition
+  v-on:before-enter="beforeEnter"
+  v-on:enter="enter"
+  v-on:after-enter="afterEnter"
+  v-on:enter-cancelled="enterCancelled"
+
+  v-on:before-leave="beforeLeave"
+  v-on:leave="leave"
+  v-on:after-leave="afterLeave"
+  v-on:leave-cancelled="leaveCancelled"
+>
+  <!-- ... -->
+</transition>
+```
+
+```javascript
+methods: {
+  // --------
+  // ENTERING
+  // --------
+
+  beforeEnter: function (el) {
+    // ...
+  },
+  // the done callback is optional when
+  // used in combination with CSS
+  enter: function (el, done) {
+    // ...
+    done()
+  },
+  afterEnter: function (el) {
+    // ...
+  },
+  enterCancelled: function (el) {
+    // ...
+  },
+
+  // --------
+  // LEAVING
+  // --------
+
+  beforeLeave: function (el) {
+    // ...
+  },
+  // the done callback is optional when
+  // used in combination with CSS
+  leave: function (el, done) {
+    // ...
+    done()
+  },
+  afterLeave: function (el) {
+    // ...
+  },
+  // leaveCancelled only available with v-show
+  leaveCancelled: function (el) {
+    // ...
+  }
+}
+```
+
+> When using JavaScript-only transitions, **the done callbacks are required for the enter and leave hooks**. Otherwise, the hooks will be called synchronously and the transition will finish immediately.
+
+>  It’s also a good idea to explicitly add `v-bind:css="false"` for JavaScript-only transitions so that Vue can skip the CSS detection. This also prevents CSS rules from accidentally interfering with the transition.
+
+ the default behavior of `<transition>` - entering and leaving happens simultaneously.
+
