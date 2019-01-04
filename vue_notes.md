@@ -775,3 +775,61 @@ methods: {
 
  the default behavior of `<transition>` - entering and leaving happens simultaneously.
 
+`<transition>` is not rendered to the DOM! `<transition-group>` does render a new HTML tag! By default, that will be a `<span>`, you can overwrite this by setting `<transition-group tag="TAG">`
+
+
+
+# Routing
+
+ingredients: `npm` install vue-router
+
+`<router-view>` make component render here
+
+```javascript
+Vue.use(VueRouter)
+
+const router = new VueRouter({
+  mode: 'history',
+  base: __dirname,
+  routes: [
+    { path: '/', component: Hello }, // No props, no nothing
+    { path: '/hello/:name', component: Hello, props: true }, // Pass route.params to props
+    { path: '/static', component: Hello, props: { name: 'world' }}, // static values
+    { path: '/dynamic/:years', component: Hello, props: dynamicPropsFn }, // custom logic for mapping between route and props
+    { path: '/attrs', component: Hello, props: { name: 'attrs' }}
+  ]
+})
+
+//then add const router into vue instance
+new Vue({
+    router,
+    ...
+})
+```
+
+
+
+## Understanding routing model
+
+1. history mode
+2. hash mode
+
+`mode: 'history'` 
+
+## Navigation with router link
+
+`<router-link to='/ralativePath'></router-link>`
+
+Using code to navigate:
+
+`this.$router.push('/');`
+
+> remember, all information you need will be store in a vue instance in a form `this.$router.params.id`
+
+You can also add object presentation to navigate the router. You need to name a path first. Then you can use it everywhere.
+
+```html
+<router-view :to="{name:'someName', params:{id: ￥route.params.id}, query:{locale:'en', q:100}"></router-view>
+
+```
+
