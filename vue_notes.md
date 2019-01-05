@@ -833,3 +833,244 @@ You can also add object presentation to navigate the router. You need to name a 
 
 ```
 
+
+
+Scroll Behavior
+
+We may want to scroll to top when navigating to a new route, or preserve the scrolling position of history entries just like real page reload does.
+
+```js
+const router = new VueRouter({
+  routes: [...],
+  scrollBehavior (to, from, savedPosition) {
+    // return desired position
+  }
+})
+```
+
+The `scrollBehavior` function receives the `to` and `from` route objects. The third argument, `savedPosition`, is only available if this is a `popstate` navigation (triggered by the browser's back/forward buttons).
+
+The function can return a scroll position object. The object could be in the form of:
+
+- `{ x: number, y: number }`
+- `{ selector: string, offset? : { x: number, y: number }}` (offset only supported in 2.6.0+)
+
+
+
+If you want to simulate the "scroll to anchor" behavior:
+
+```js
+scrollBehavior (to, from, savedPosition) {
+  if (to.hash) {
+    return {
+      selector: to.hash
+      // , offset: { x: 0, y: 10 }
+    }
+  }
+}
+```
+
+Here is a official great example of handling the hash anchor:
+
+```javascript
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+
+Vue.use(VueRouter)
+
+const Home = { template: '<div class="home">home</div>' }
+const Foo = { template: '<div class="foo">foo</div>' }
+const Bar = {
+  template: `
+    <div class="bar">
+      bar
+      <div style="height:500px"></div>
+      <p id="anchor" style="height:500px">Anchor</p>
+      <p id="anchor2">Anchor2</p>
+    </div>
+  `
+}
+
+// scrollBehavior:
+// - only available in html5 history mode
+// - defaults to no scroll behavior
+// - return false to prevent scroll
+const scrollBehavior = function (to, from, savedPosition) {
+  if (savedPosition) {
+    // savedPosition is only available for popstate navigations.
+    return savedPosition
+  } else {
+    const position = {}
+
+    // scroll to anchor by returning the selector
+    if (to.hash) {
+      position.selector = to.hash
+
+      // specify offset of the element
+      if (to.hash === '#anchor2') {
+        position.offset = { y: 100 }
+      }
+
+      if (document.querySelector(to.hash)) {
+        return position
+      }
+
+      // if the returned position is falsy or an empty object,
+      // will retain current scroll position.
+      return false
+    }
+
+    return new Promise(resolve => {
+      // check if any matched route config has meta that requires scrolling to top
+      if (to.matched.some(m => m.meta.scrollToTop)) {
+        // coords will be used if no selector is provided,
+        // or if the selector didn't match any element.
+        position.x = 0
+        position.y = 0
+      }
+
+      // wait for the out transition to complete (if necessary)
+      this.app.$root.$once('triggerScroll', () => {
+        // if the resolved position is falsy or an empty object,
+        // will retain current scroll position.
+        resolve(position)
+      })
+    })
+  }
+}
+
+const router = new VueRouter({
+  mode: 'history',
+  base: __dirname,
+  scrollBehavior,
+  routes: [
+    { path: '/', component: Home, meta: { scrollToTop: true }},
+    { path: '/foo', component: Foo },
+    { path: '/bar', component: Bar, meta: { scrollToTop: true }}
+  ]
+})
+
+new Vue({
+  router,
+  template: `
+    <div id="app">
+      <h1>Scroll Behavior</h1>
+      <ul>
+        <li><router-link to="/">/</router-link></li>
+        <li><router-link to="/foo">/foo</router-link></li>
+        <li><router-link to="/bar">/bar</router-link></li>
+        <li><router-link to="/bar#anchor">/bar#anchor</router-link></li>
+        <li><router-link to="/bar#anchor2">/bar#anchor2</router-link></li>
+      </ul>
+      <transition name="fade" mode="out-in" @after-leave="afterLeave">
+        <router-view class="view"></router-view>
+      </transition>
+    </div>
+  `,
+  methods: {
+    afterLeave () {
+      this.$root.$emit('triggerScroll')
+    }
+  }
+}).$mount('#app')
+```
+
+
+
+## Guards
+
+As the name suggests, the navigation guards provided by `vue-router` are primarily used to guard navigations either by redirecting it or canceling it. There are a number of ways to hook into the route navigation process: globally, per-route, or in-component.
+
+Remember that **params or query changes won't trigger enter/leave navigation guards**. You can either [watch the `$route` object](https://router.vuejs.org/guide/essentials/dynamic-matching.html#reacting-to-params-changes) to react to those changes, or use the `beforeRouteUpdate` in-component guard.
+
+
+
+> I realize that a 'design pattern' that all actions are distributed as several specific 'events' which also provide with specific timings to do some operations, that is, hooks.
+
+
+
+**Note that** when implementing `beforeRouteEnter()` interface provided by `vue-router`, `data` is inaccessible. Because in this case, you are in the `before route enter` timing. 
+
+Finally, you can directly define route navigation guards inside route components (the ones passed to the router configuration) with the following options:
+
+- `beforeRouteEnter`
+- `beforeRouteUpdate`
+- `beforeRouteLeave`
+
+```js
+const Foo = {
+  template: `...`,
+  beforeRouteEnter (to, from, next) {
+    // called before the route that renders this component is confirmed.
+    // does NOT have access to `this` component instance,
+    // because it has not been created yet when this guard is called!
+  },
+  beforeRouteUpdate (to, from, next) {
+    // called when the route that renders this component has changed,
+    // but this component is reused in the new route.
+    // For example, for a route with dynamic params `/foo/:id`, when we
+    // navigate between `/foo/1` and `/foo/2`, the same `Foo` component instance
+    // will be reused, and this hook will be called when that happens.
+    // has access to `this` component instance.
+  },
+  beforeRouteLeave (to, from, next) {
+    // called when the route that renders this component is about to
+    // be navigated away from.
+    // has access to `this` component instance.
+  }
+}
+```
+
+**The `beforeRouteEnter` guard does NOT have access to `this`**, because the guard is called before the navigation is confirmed, thus the new entering component has not even been created yet.
+
+However, you can access the instance by passing a callback to `next`. The callback will be called when the navigation is confirmed, and the component instance will be passed to the callback as the argument:
+
+```js
+beforeRouteEnter (to, from, next) {
+  next(vm => {
+    // access to component instance via `vm`
+  })
+}
+```
+
+Note that `beforeRouteEnter` is the only guard that supports passing a callback to `next`. For `beforeRouteUpdate` and `beforeRouteLeave`, `this` is already available, so passing a callback is unnecessary and therefore *not supported*:
+
+```js
+beforeRouteUpdate (to, from, next) {
+  // just use `this`
+  this.name = to.params.name
+  next()
+}
+```
+
+The **leave guard** is usually used to prevent the user from accidentally leaving the route with unsaved edits. The navigation can be canceled by calling `next(false)`.
+
+```js
+beforeRouteLeave (to, from, next) {
+  const answer = window.confirm('Do you really want to leave? you have unsaved changes!')
+  if (answer) {
+    next()
+  } else {
+    next(false)
+  }
+}
+```
+
+## The Full Navigation Resolution Flow
+
+1. Navigation triggered.
+2. Call leave guards in deactivated components.
+3. Call global `beforeEach` guards.
+4. Call `beforeRouteUpdate` guards in reused components.
+5. Call `beforeEnter` in route configs.
+6. Resolve async route components.
+7. Call `beforeRouteEnter` in activated components.
+8. Call global `beforeResolve` guards.
+9. Navigation confirmed.
+10. Call global `afterEach` hooks.
+11. DOM updates triggered.
+12. Call callbacks passed to `next` in `beforeRouteEnter` guards with instantiated instances.
+
+
+
+Lazy loading (webpack default setting is bundle all files into one file and all contents will be loaded at the beginning) Most of time we don't have to do that, since you might never load some part of your application.
