@@ -1074,3 +1074,43 @@ beforeRouteLeave (to, from, next) {
 
 
 Lazy loading (webpack default setting is bundle all files into one file and all contents will be loaded at the beginning) Most of time we don't have to do that, since you might never load some part of your application.
+
+
+
+# Vuex
+
+
+
+Central State Management
+
+`$` indicates the property is not added by us, but built-in property from `vue.js` or external packages.
+
+Another caveat is that really similar to `Node.js`; you need to register external plugins by `Vue.use()`; then you can use the plugins everywhere inside the same root vue instance.
+
+ 
+
+There is a problem:
+
+If you wanna access the same state, you will repeat yourself code several places; to solve this issue, we need a `getter`. (every similar to `mixins`, but `mixins` are sharing common code. getter just handles operations on the state.)
+
+
+
+```javascript
+import {mapGetters} from 'vuex'
+export default {
+    computed: {
+        ...mapGetters([
+            'getterOne',
+            'getterTwo'
+        ]),
+        myOwnComputed: function(){
+            ...
+        }
+    }
+}
+//this is a much quicker way to access states rather than this.$store.getters.getterOne
+// the spread symbol there enables us to add our own computed; otherwise, it will only get mapGetters.
+```
+
+
+
