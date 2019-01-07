@@ -1114,3 +1114,160 @@ export default {
 
 
 
+## Mutations
+
+Vuex mutations are very similar to events: each mutation has a string **type** and a **handler**. The handler function is where we perform actual state modifications, and it will receive the state as the first argument:
+
+```js
+const store = new Vuex.Store({
+  state: {
+    count: 1
+  },
+  mutations: {
+    increment (state) {
+      // mutate state
+      state.count++
+    }
+  }
+})
+```
+
+You cannot directly call a mutation handler. Think of it more like event registration: "When a mutation with type `increment` is triggered, call this handler." To invoke a mutation handler, you need to call `store.commit` with its type:
+
+```js
+store.commit('increment')
+```
+
+
+
+![1546834841038](imgs/1546834841038.png)
+
+### Committing Mutations in Components
+
+You can commit mutations in components with `this.$store.commit('xxx')`, or use the `mapMutations`helper which maps component methods to `store.commit` calls (requires root `store` injection):
+
+```js
+import { mapMutations } from 'vuex'
+
+export default {
+  // ...
+  methods: {
+    ...mapMutations([
+      'increment', // map `this.increment()` to `this.$store.commit('increment')`
+
+      // `mapMutations` also supports payloads:
+      'incrementBy' // map `this.incrementBy(amount)` to `this.$store.commit('incrementBy', amount)`
+    ]),
+    ...mapMutations({
+      add: 'increment' // map `this.add()` to `this.$store.commit('increment')`
+    })
+  }
+}
+```
+
+## Actions
+
+Mutations have to be synchronous. If they are asynchronous, there will be no way to track the mutations from which operation. Thus, we need `Actions` to handle this.
+
+Actions are similar to mutations, the differences being that:
+
+- Instead of mutating the state, `actions` **commit** `mutations`.
+- Actions can contain arbitrary asynchronous operations.
+
+```js
+actions: {
+  incrementAsync ({ commit }) {
+    setTimeout(() => {
+      commit('increment')
+    }, 1000)
+  }
+}
+```
+
+
+
+![1546838513799](imgs/1546838513799.png)
+
+A more practical example of real-world actions would be an action to checkout a shopping cart, which involves **calling an async API** and **committing multiple mutations**:
+
+```js
+actions: {
+  checkout ({ commit, state }, products) {
+    // save the items currently in the cart
+    const savedCartItems = [...state.cart.added]
+    // send out checkout request, and optimistically
+    // clear the cart
+    commit(types.CHECKOUT_REQUEST)
+    // the shop API accepts a success callback and a failure callback
+    shop.buyProducts(
+      products,
+      // handle success
+      () => commit(types.CHECKOUT_SUCCESS),
+      // handle failure
+      () => commit(types.CHECKOUT_FAILURE, savedCartItems)
+    )
+  }
+}
+```
+
+### Dispatching Actions in Components
+
+You can dispatch actions in components with `this.$store.dispatch('xxx')`, or use the `mapActions`helper which maps component methods to `store.dispatch` calls (requires root `store` injection):
+
+in another words, what `mapActions` does is map the `action` into `methods`, by which you can use the actions in your component. (the `verb` for `action` is `dispatch`, which is really similar to `event`)
+
+```js
+import { mapActions } from 'vuex'
+
+export default {
+  // ...
+  methods: {
+    ...mapActions([
+      'increment', // map `this.increment()` to `this.$store.dispatch('increment')`
+
+      // `mapActions` also supports payloads:
+      'incrementBy' // map `this.incrementBy(amount)` to `this.$store.dispatch('incrementBy', amount)`
+    ]),
+    ...mapActions({
+      add: 'increment' // map `this.add()` to `this.$store.dispatch('increment')`
+    })
+  }
+}
+```
+
+> Actually, no matter what kind of tasks you wanna execute, it would be better to use `actions`
+
+
+
+# Modules
+
+Due to using a single state tree, all state of our application is contained inside one big object. However, as our application grows in scale, the store can get really bloated.
+
+To help with that, Vuex allows us to divide our store into **modules**. Each module can contain its own state, mutations, actions, getters, and even nested modules - it's fractal all the way down:
+
+```js
+const moduleA = {
+  state: { ... },
+  mutations: { ... },
+  actions: { ... },
+  getters: { ... }
+}
+
+const moduleB = {
+  state: { ... },
+  mutations: { ... },
+  actions: { ... }
+}
+
+const store = new Vuex.Store({
+  modules: {
+    a: moduleA,
+    b: moduleB
+  }
+})
+
+store.state.a // -> `moduleA`'s state
+store.state.b // -> `moduleB`'s state
+```
+
+For more information, please see the code file there, including structures.
