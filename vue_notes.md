@@ -829,7 +829,7 @@ Using code to navigate:
 You can also add object presentation to navigate the router. You need to name a path first. Then you can use it everywhere.
 
 ```html
-<router-view :to="{name:'someName', params:{id: ￥route.params.id}, query:{locale:'en', q:100}"></router-view>
+<router-view :to="{name:'someName', params:{id: $route.params.id}, query:{locale:'en', q:100}"></router-view>
 
 ```
 
