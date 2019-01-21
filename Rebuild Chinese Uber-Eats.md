@@ -50,6 +50,23 @@ use this on styling `<a>`, which will make the whole outside container tag click
 
 
 
-## @media & media queries
+### @media & media queries
 
 [MDN: what is media query and why we need it? How do we use it?](https://developer.mozilla.org/en-US/docs/Web/CSS/Media_Queries/Using_media_queries)
+
+You need media query to identify the `dpr` of the device, which will determine which icon file will be applied.
+
+```stylus
+bg-image($url)
+	background-image: url($url + "@2x.png")
+	@media (-webkit-min-device-pixel-ratio: 3), (min-device-pixel-ratio: 3)
+    background-image: url($url + "@3x.png")
+```
+
+
+
+### `vertical-align`
+
+This is a self-explanatory property in CSS. If you notice that some sibling tags are not aligned well, you can use this property. 
+
+`vertical-align: top` (align by wrapper)
