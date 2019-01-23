@@ -32,7 +32,19 @@ Scaffolder provides developer some primitive codes or fold structures, so that d
 
 
 
+## CSS Sticky footers
+
+The purpose of a sticky footer is that it "sticks" to the bottom of the browser window. But not always, if there is enough content on the page to push the footer lower, it still does that. But if the content on the page is short, a sticky footer will still hang to the bottom of the browser window.
+
+[Sticky Footer, Five Ways from css-tricks.com](https://css-tricks.com/couple-takes-sticky-footer/)
+
+
+
 ## Tips Repository
+
+### Conventions When Writing CSS
+
+- Structure and position attributes first; then style attributes
 
 ### `line-height` vs `height`
 
@@ -63,10 +75,42 @@ bg-image($url)
     background-image: url($url + "@3x.png")
 ```
 
-
+> To display a image, you don't have to use `<img>` but `<span>` then set `inline-block` and background.
 
 ### `vertical-align`
 
 This is a self-explanatory property in CSS. If you notice that some sibling tags are not aligned well, you can use this property. 
 
 `vertical-align: top` (align by wrapper)
+
+
+
+### Hide the content overflow one line
+
+We sometimes wanna hide the content overflowing the line and display "..." to prompt that there is hidden content. To achieve this:
+
+```css
+white-space: nowrap
+overflow: hidden
+text-overflow: ellipsis
+```
+
+> Sequences of whitespace will collapse into a single whitespace. Text will never wrap to the next line.
+
+
+
+### position fixed vs absolute
+
+`fixed` is really fixed, while the content will change according to the movement of scrollbar in `absolute` mode. 
+
+ 
+
+### Why we need `font-size: 0` in `inline-block`?
+
+[Chinese Explanation with pics](https://segmentfault.com/q/1010000008628181)
+
+
+
+### Best case for table layout
+
+When you need some grids to display the content with several lines and text should be placed in the center, you should consider `display: table-cell`
