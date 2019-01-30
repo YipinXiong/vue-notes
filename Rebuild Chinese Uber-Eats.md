@@ -40,6 +40,30 @@ The purpose of a sticky footer is that it "sticks" to the bottom of the browser 
 
 
 
+## Mechanism of Vue - getter and setter
+
+[Explanations of getter and setter](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Guide/Working_with_Objects#%E5%AE%9A%E4%B9%89_getters_%E4%B8%8E_setters)
+
+![data](imgs/data.png)
+
+
+
+## Calculate the height of dom
+
+To achieve this, using api `clientHeight`
+
+![Image:Dimensions-client.png](imgs/Dimensions-client.png)
+
+This is the formula to calculate.
+
+You need to call `nextTick()` api, whenever you need to manipulate the vanilla DOM. 
+
+
+
+## vue.set()
+
+When you need to add new property to an object mounted on vue instance, you need this api to set `setter` and `getter`
+
 ## Tips Repository
 
 ### Conventions When Writing CSS
@@ -79,7 +103,7 @@ bg-image($url)
 
 ### `vertical-align`
 
-This is a self-explanatory property in CSS. If you notice that some sibling tags are not aligned well, you can use this property. 
+This is a self-explanatory property in CSS. If you notice that some sibling tags are not aligned well, you can use this property.  Especially it will be set in `inline-block`.
 
 `vertical-align: top` (align by wrapper)
 
@@ -114,3 +138,88 @@ text-overflow: ellipsis
 ### Best case for table layout
 
 When you need some grids to display the content with several lines and text should be placed in the center, you should consider `display: table-cell`
+
+
+
+### Differentiate the `click` event from PC or Mobile
+
+Check the exist of `event._constructed` property
+
+
+
+### transition
+
+Only `v-if`, `v-for`, `v-show` can trigger the transition in vue.
+
+### Tricky Padding
+
+Adding paddings to a button can increase clicking area. 
+
+
+
+### dom.getBoundingClientRect()
+
+Use this method you can get the relative top and left of an element relative to the browser.
+
+
+
+### event bubbling and event capturing
+
+Event bubbling and capturing are two ways of event propagation in the HTML DOM API, when an event occurs in an element inside another element, and both elements have registered a handle for that event. The event propagation mode determines in [which order the elements receive the event](http://www.quirksmode.org/js/events_order.html).
+
+With bubbling, the event is first captured and handled by the innermost element and then propagated to outer elements.
+
+With capturing, the event is first captured by the outermost element and propagated to the inner elements.
+
+Capturing is also called "trickling", which helps remember the propagation order:
+
+> trickle down, bubble up
+
+Here is a great example using bubbling to make codes more concise: (click the `<li>` and display the corresponding color)
+
+```html
+<ul id="color-list">
+    <li>red</li>
+    <li>yellow</li>
+    <li>blue</li>
+    <li>green</li>
+    <li>black</li>
+    <li>white</li>
+</ul>
+```
+
+If you don't use bubbling:
+
+```js
+(function(){
+    var color_list = document.getElementById('color-list');
+    var colors = color_list.getElementsByTagName('li');
+    for(var i=0;i<colors.length;i++){                          
+        colors[i].addEventListener('click',showColor,false);
+    };
+    function showColor(e){
+        var x = e.target;
+        console.log("The color is " + x.innerHTML);
+    };
+})();
+```
+
+If use bubbling:
+
+```javascript
+(function(){
+    var color_list = document.getElementById('color-list');
+    color_list.addEventListener('click',showColor,false);
+    function showColor(e){
+        var x = e.target;
+        if(x.nodeName.toLowerCase() === 'li'){
+            console.log('The color is ' + x.innerHTML);
+        }
+    }
+})();
+```
+
+
+
+
+
